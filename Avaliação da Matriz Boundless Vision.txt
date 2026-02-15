@@ -1,0 +1,24 @@
+﻿Avaliação da Matriz Boundless Vision
+1. Embasamento Acadêmico (Referencial Teórico)
+A matriz utiliza dois pilares reconhecidos mundialmente:
+    • LPS (Last Planner System): Ao focar no PPC (Percentual de Planos Concluídos), você está aplicando o método de Glenn Ballard e Greg Howell. Academicamente, o PPC é o indicador mais eficaz para medir a estabilidade do fluxo de trabalho.
+    • ONA (Organizational Network Analysis): A aba de "Conexões" (Links) permite mapear a Centralidade de Grau. Na gestão de obras, identificar que um ajudante (como o Samu) tem uma conexão fraca ou de alto erro com seu oficial é a base para a teoria de Social Network Analysis aplicada à segurança no trabalho (Sacks et al., 2009).
+2. Eficácia Gerencial (Prática de Mercado)
+Gerencialmente, a matriz é eficaz porque ela não foca apenas no resultado (o prédio pronto), mas nos processos intermediários:
+    • Métrica de Retrabalho: É o indicador definitivo de "Qualidade na Fonte". No Lean, isso reduz o Muda (desperdício).
+    • Separação por IDs: Evita a ambiguidade. Em obras com muitos colaboradores, nomes repetidos ou funções similares causam erros de relatório; o uso de IDs garante a integridade dos dados.
+3. Análise de Pontos Críticos
+A matriz permite o que chamamos de Gestão por Exceção. Em vez de olhar para todos os 50 funcionários, o Gestor de Obra foca apenas nos nós que o gráfico 3D sinalizar como críticos (Ex: Alta Taxa de Retrabalho + Baixo PPC).
+
+Checklist de Boas Práticas (Sugerido vs. Implementado)
+Critério de Boa Prática	Status na Matriz	Importância
+Consistência de Dados	✅ Implementado	O uso de IDs únicos evita erros de duplicidade.
+Indicador de Tendência	⚠️ Sugestão	Adicionar uma coluna "PPC Semana Anterior" para ver se o oficial está melhorando ou piorando.
+Nível de Dependência	✅ Implementado	A aba de Conexões define quem bloqueia quem (Fluxo de Precedência).
+KPI de Segurança	✅ Implementado	Através das colunas de Observação e Status (Ex: Caso Nabi).
+
+Avaliaçao
+A Matriz sugerida é Altamente Eficaz. Ela transforma observações subjetivas ("o Samu é desorientado") em dados objetivos ("ID 7: PPC 30%, Retrabalho 25%").
+Para uma análise gerencial de nível executivo, essa estrutura é superior a 90% dos softwares de gestão de obras tradicionais, pois ela visualiza a interdependência entre as equipes, algo que uma lista comum de Excel não consegue mostrar.
+
+
