@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Boundless Vision | Casa Estoril</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-deep: #0a0c10;
+            --glass: rgba(16, 20, 28, 0.92);
+            --accent: #00ff96;
+            --danger: #ff4d4d;
+            --text-main: #f0f2f5;
+            --text-dim: #9ca3af;
+        }
+
+        body { 
+            margin: 0; 
+            background: var(--bg-deep); 
+            font-family: 'Inter', sans-serif; 
+            color: var(--text-main); 
+            overflow: hidden; 
+        }
+
+        /* Sidebar de Controle Alinhada à Esquerda */
+        #sidebar {
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 320px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
+            padding: 30px 20px;
+            overflow-y: auto;
+            box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+        }
+
+        h1 { font-size: 18px; font-weight: 700; color: var(--accent); margin-bottom: 5px; letter-spacing: -0.5px; }
+        .sub-h1 { font-size: 10px; color: var(--text-dim); text-transform: uppercase; margin-bottom: 30px; }
+        
+        section { margin-bottom: 35px; }
+        h2 { font-size: 13px; font-weight: 600; color: var(--text-main); margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        label { display: block; font-size: 11px; color: var(--text-dim); margin-top: 12px; margin-bottom: 4px; }
+
+        select, input {
+            width: 100%; background: #1f2937; border: 1px solid #374151;
+            color: white; padding: 10px; border-radius: 6px; font-size: 13px; outline: none;
+        }
+
+        button {
+            width: 100%; border: none; padding: 12px; border-radius: 6px; cursor: pointer;
+            font-weight: 600; font-size: 12px; transition: 0.2s; margin-top: 10px;
+        }
+        .btn-primary { background: var(--accent); color: #000; }
+        .btn-secondary { background: #374151; color: white; margin-top: 5px; }
+        button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        .kpi-box { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        .val-display { font-size: 18px; font-weight: 700; color: var(--accent); }
+
+        #3d-graph { width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+
+    <aside id="sidebar">
+        <h1>BOUNDLESS VISION</h1>
+        <div class="sub-h1">Casa Estoril | Gestão Ativa 3.0</div>
+
+        <section>
+            <h2>Visualização</h2>
+            <label>Filtrar Equipe Ativa</label>
+            <select id="filter-team" onchange="filterData()">
+                <option value="todos">Todos os Trabalhos</option>
+                <option value="ferros">Ferragem</option>
+                <option value="cofragem">Cofragem</option>
+                <option value="eletrica">Elétrica</option>
+                <option value="pintura">Pintura</option>
+                <option value="gesso">Gesso</option>
+            </select>
+        </section>
+
+        <section>
+            <h2>Novos Profissionais</h2>
+            <input type="text" id="new-name" placeholder="Nome do Oficial/Ajudante">
+            <select id="new-group">
+                <option value="ferros">Ferragem</option>
+                <option value="cofragem">Cofragem</option>
+                <option value="eletrica">Elétrica</option>
+                <option value="pintura">Pintura</option>
+                <option value="gesso">Gesso</option>
+            </select>
+            <button class="btn-primary" onclick="addNewNode()">ADICIONAR À MALHA</button>
+        </section>
+
+        <section>
+            <h2>Simulador de Impacto</h2>
+            <div class="kpi-box">
+                <div id="sel-name" style="font-size: 14px; font-weight: 600;">Selecione um Profissional</div>
+                <label>Produtividade (PPC): <span id="val-ppc">--</span>%</label>
+                <input type="range" id="sim-ppc" min="0" max="100" value="80" oninput="updateSim()">
+                <label>Taxa de Erro: <span id="val-rework">--</span>%</label>
+                <input type="range" id="sim-rework" min="0" max="50" value="5" oninput="updateSim()">
+            </div>
+        </section>
+
+        <section>
+            <button class="btn-secondary" onclick="exportReport()">📥 EXPORTAR RELATÓRIO TXT</button>
+        </section>
+    </aside>
+
+    <div id="3d-graph"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.70.10/dist/3d-force-graph.min.js"></script>
+
+    <script>
+        let fullData = {
+            nodes: [
+                {id: 1, name: "Gestor/Encarregado", group: "gestao", ppc: 90, rework: 0, size: 20},
+                {id: 2, name: "Francisco", group: "cofragem", ppc: 82, rework: 5, size: 14},
+                {id: 3, name: "Ibrahim", group: "ferros", ppc: 99, rework: 1, size: 18},
+                {id: 4, name: "Eric", group: "apoio", ppc: 92, rework: 0, size: 15},
+                {id: 5, name: "Nabi", group: "cofragem", ppc: 50, rework: 10, size: 10},
+                {id: 6, name: "Samu", group: "cofragem", ppc: 30, rework: 25, size: 10}
+            ],
+            links: [
+                {source: 1, target: 2}, {source: 1, target: 3}, {source: 1, target: 4},
+                {source: 2, target: 5}, {source: 2, target: 6}
+            ]
+        };
+
+        const colors = { gestao: '#9c27b0', ferros: '#00ff96', cofragem: '#ff4d4d', eletrica: '#ffeb3b', pintura: '#e91e63', gesso: '#00bcd4', apoio: '#2196f3' };
+        
+        const Graph = ForceGraph3D()(document.getElementById('3d-graph'))
+            .graphData(fullData)
+            .backgroundColor('#0a0c10')
+            .nodeColor(n => colors[n.group] || '#fff')
+            .nodeVal(n => n.size)
+            .nodeLabel(n => `${n.name} | PPC: ${n.ppc}%`)
+            .linkWidth(1.5)
+            .onNodeClick(node => {
+                window.selectedNode = node;
+                document.getElementById('sel-name').innerText = node.name;
+                document.getElementById('sim-ppc').value = node.ppc;
+                document.getElementById('sim-rework').value = node.rework;
+                updateLabels();
+            });
+
+        function filterData() {
+            const team = document.getElementById('filter-team').value;
+            if (team === 'todos') {
+                Graph.graphData(fullData);
+            } else {
+                const filteredNodes = fullData.nodes.filter(n => n.group === team || n.group === 'gestao');
+                const nodeIds = filteredNodes.map(n => n.id);
+                const filteredLinks = fullData.links.filter(l => nodeIds.includes(l.source.id || l.source) && nodeIds.includes(l.target.id || l.target));
+                Graph.graphData({ nodes: filteredNodes, links: filteredLinks });
+            }
+        }
+
+        function addNewNode() {
+            const name = document.getElementById('new-name').value;
+            const group = document.getElementById('new-group').value;
+            if(!name) return;
+            const newNode = { id: Date.now(), name, group, ppc: 70, rework: 5, size: 12 };
+            fullData.nodes.push(newNode);
+            fullData.links.push({ source: 1, target: newNode.id });
+            filterData();
+            document.getElementById('new-name').value = '';
+        }
+
+        function updateSim() {
+            if (!window.selectedNode) return;
+            window.selectedNode.ppc = document.getElementById('sim-ppc').value;
+            window.selectedNode.rework = document.getElementById('sim-rework').value;
+            updateLabels();
+            Graph.graphData(Graph.graphData());
+        }
+
+        function updateLabels() {
+            document.getElementById('val-ppc').innerText = document.getElementById('sim-ppc').value;
+            document.getElementById('val-rework').innerText = document.getElementById('sim-rework').value;
+        }
+
+        function exportReport() {
+            let txt = "RELATÓRIO DE PERFORMANCE - CASA ESTORIL\n====================================\n\n";
+            fullData.nodes.forEach(n => {
+                txt += `PROFISSIONAL: ${n.name}\nEQUIPE: ${n.group}\nPRODUTIVIDADE: ${n.ppc}%\nRETRABALHO: ${n.rework}%\n----------------------------\n`;
+            });
+            const blob = new Blob([txt], { type: 'text/plain' });
+            const anchor = document.createElement('a');
+            anchor.download = 'relatorio_casa_estoril.txt';
+            anchor.href = (window.webkitURL || window.URL).createObjectURL(blob);
+            anchor.click();
+        }
+    </script>
+</body>
+</html>

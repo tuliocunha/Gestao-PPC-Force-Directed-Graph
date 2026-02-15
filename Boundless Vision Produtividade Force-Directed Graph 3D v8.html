@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casa Estoril | Analytics Pro 3D</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; background-color: #00050a; overflow: hidden; font-family: 'Roboto', sans-serif; }
+        
+        /* Overlay de Vidro Futurista */
+        .glass-ui {
+            position: absolute;
+            background: rgba(0, 10, 20, 0.6);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 255, 150, 0.2);
+            color: #e0e0e0;
+            padding: 20px;
+            border-radius: 4px; /* Bordas retas para visual mais técnico */
+            z-index: 100;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+
+        #header { top: 20px; left: 20px; border-left: 3px solid #00ff96; }
+        #legend { top: 20px; right: 20px; width: 200px; }
+        #kpi-card { bottom: 20px; left: 20px; width: 300px; min-height: 120px; border-bottom: 3px solid #00ff96; }
+
+        h1 { margin: 0; font-family: 'Orbitron', sans-serif; font-size: 16px; letter-spacing: 3px; color: #00ff96; }
+        h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #888; }
+
+        .stat-row { display: flex; justify-content: space-between; margin: 8px 0; font-size: 13px; }
+        .stat-label { color: #aaa; }
+        .stat-value { color: #fff; font-weight: bold; font-family: 'Orbitron', sans-serif; }
+
+        /* Legenda */
+        .lg-item { display: flex; align-items: center; margin-bottom: 8px; font-size: 11px; }
+        .lg-color { width: 12px; height: 12px; margin-right: 10px; border: 1px solid rgba(255,255,255,0.3); }
+
+        #loading-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #00050a; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .spinner { width: 40px; height: 40px; border: 3px solid #111; border-top: 3px solid #00ff96; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div class="spinner"></div>
+        <p style="color: #00ff96; margin-top: 20px; font-family: 'Orbitron', sans-serif; font-size: 10px;">INICIALIZANDO MOTOR 3D...</p>
+    </div>
+
+    <div id="header" class="glass-ui">
+        <h1>CASA ESTORIL</h1>
+        <div style="font-size: 9px; margin-top: 4px; color: #888;">FORCE-DIRECTED GRAPH | V 2.0</div>
+    </div>
+
+    <div id="legend" class="glass-ui">
+        <h3>Departamentos</h3>
+        <div class="lg-item"><div class="lg-color" style="background:#9C27B0"></div> Gestão ESTRATÉGICA</div>
+        <div class="lg-item"><div class="lg-color" style="background:#F44336"></div> COFRAGEM (Crítico)</div>
+        <div class="lg-item"><div class="lg-color" style="background:#4CAF50"></div> FERROS (Alta Performance)</div>
+        <div class="lg-item"><div class="lg-color" style="background:#FF9800"></div> PEDREIROS</div>
+        <div class="lg-item"><div class="lg-color" style="background:#2196F3"></div> APOIO / ERIC</div>
+    </div>
+
+    <div id="kpi-card" class="glass-ui">
+        <h3>Análise de Unidade</h3>
+        <div id="node-data">
+            <p style="font-size: 12px; color: #666;">Selecione um ponto na malha para detalhamento.</p>
+        </div>
+    </div>
+
+    <div id="3d-graph"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/3d-force-graph@1.70.10/dist/3d-force-graph.min.js"></script>
+
+    <script>
+        const data = {
+            nodes: [
+                {id: 0, name: "Gestor Principal", group: 0, val: 30, p: "98%", e: "0.2%"},
+                {id: 1, name: "Encarregado Geral", group: 0, val: 20, p: "85%", e: "1.5%"},
+                {id: 2, name: "Makit", group: 1, val: 12, p: "60%", e: "4.0%"},
+                {id: 3, name: "Camal", group: 1, val: 10, p: "45%", e: "7.2%"},
+                {id: 4, name: "Francisco", group: 1, val: 15, p: "82%", e: "1.1%"},
+                {id: 8, name: "Ibrahim", group: 2, val: 25, p: "99%", e: "0.1%"},
+                {id: 9, name: "Makit Ferros", group: 2, val: 18, p: "88%", e: "0.9%"},
+                {id: 13, name: "Eric", group: 4, val: 22, p: "92%", e: "0.5%"},
+                {id: 11, name: "Osvaldo", group: 3, val: 14, p: "70%", e: "3.2%"},
+                {id: 12, name: "Frank", group: 3, val: 12, p: "65%", e: "2.1%"}
+            ],
+            links: [
+                {source: 0, target: 1}, {source: 1, target: 2}, {source: 1, target: 8}, 
+                {source: 1, target: 11}, {source: 1, target: 13}, {source: 2, target: 3}, 
+                {source: 2, target: 4}, {source: 8, target: 9}, {source: 11, target: 12}
+            ]
+        };
+
+        const colors = ['#9C27B0', '#F44336', '#4CAF50', '#FF9800', '#2196F3'];
+
+        const Graph = ForceGraph3D()
+            (document.getElementById('3d-graph'))
+            .graphData(data)
+            .backgroundColor('#00050a')
+            .nodeLabel(node => `<b style="color:${colors[node.group]}">${node.name}</b>`)
+            .nodeColor(node => colors[node.group])
+            .nodeRelSize(5)
+            .linkWidth(1.5)
+            .linkColor(() => 'rgba(0, 255, 150, 0.2)')
+            .linkDirectionalParticles(2)
+            .linkDirectionalParticleSpeed(0.005)
+            .linkDirectionalParticleWidth(3)
+            // Habilita Rotação, Zoom e Pan nativamente
+            .enableNavigationControls(true) 
+            .onNodeHover(node => {
+                const info = document.getElementById('node-data');
+                if(node) {
+                    info.innerHTML = `
+                        <div class="stat-row"><span class="stat-label">NOME:</span><span class="stat-value">${node.name}</span></div>
+                        <div class="stat-row"><span class="stat-label">PRODUTIVIDADE:</span><span class="stat-value" style="color:#00ff96">${node.p}</span></div>
+                        <div class="stat-row"><span class="stat-label">ERRO TAX:</span><span class="stat-value" style="color:#ff4336">${node.e}</span></div>
+                    `;
+                }
+            });
+
+        // Remove a tela de carregamento após 1.5s
+        setTimeout(() => {
+            document.getElementById('loading-screen').style.display = 'none';
+        }, 1500);
+
+        // Auto-rotação suave para dar vida ao gráfico
+        Graph.controls().autoRotate = true;
+        Graph.controls().autoRotateSpeed = 0.5;
+
+    </script>
+</body>
+</html>
